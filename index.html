@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Tienda Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Un pequeño toque de estilo extra */
+        .card-producto:hover { transform: scale(1.02); transition: all 0.2s; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-indigo-600">Catálogo Online</h1>
+            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full border border-green-200">Abierto</span>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4">
+        <p class="text-gray-500 text-sm mb-6 text-center">Gestionado desde Google Sheets</p>
+        
+        <div id="catalogo" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <p class="col-span-full text-center py-10 text-gray-400 italic">Cargando productos...</p>
+        </div>
+    </main>
+
+    <script>
+        // -----------------------------------------------------------
+        // PASO CLAVE: Pegá acá tu link de "Publicar en la web" de Google Sheets
+        // Asegurate que termine en: output=csv
+        // -----------------------------------------------------------
+        const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTYA7Eb-Yzk6HkPIQ4HiQYJJeUNLEbcmCxhpiu9ycdEDkE6A1oG6xdYn10kiuPRmtN8hCDlbV7oYIQc/pub?output=csv";
+
+        async function cargarProductos() {
+            try {
+                const respuesta = await fetch(URL_CSV);
+                const datos = await respuesta.text();
+                
+                // Convertimos el CSV en filas y columnas
+                const filas = datos.split("\n").slice(1); 
+                const contenedor = document.getElementById("catalogo");
+                contenedor.innerHTML = ""; // Limpiamos el mensaje de carga
+
+                filas.forEach(fila => {
+                    // Separamos por coma: nombre, precio, imagen, descripción
+                    const columnas = fila.split(",");
+                    
+                    if(columnas.length >= 2) {
+                        const [nombre, precio, imagen, desc] = columnas;
+                        
+                        contenedor.innerHTML += `
+                            <div class="card-producto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                                <div class="h-40 overflow-hidden bg-gray-200">
+                                    <img src="${imagen.trim()}" alt="${nombre}" class="w-full h-full object-cover">
+                                </div>
+                                <div class="p-3 flex flex-col flex-grow">
+                                    <h3 class="font-semibold text-gray-900 leading-tight mb-1 text-sm">${nombre}</h3>
+                                    <p class="text-indigo-600 font-bold text-lg mb-2">$${precio}</p>
+                                    <p class="text-gray-500 text-xs mb-4 line-clamp-2">${desc || ''}</p>
+                                    
+                                    <a href="https://wa.me/TU_NUMERO_AQUI?text=Hola! Me interesa: ${nombre}" 
+                                       target="_blank"
+                                       class="mt-auto w-full bg-indigo-600 text-white text-center py-2 rounded-lg text-xs font-bold hover:bg-indigo-700">
+                                        Pedir por WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } catch (error) {
+                console.error("Error cargando productos:", error);
+                document.getElementById("catalogo").innerHTML = "<p class='col-span-full text-center text-red-500'>Error al conectar con la base de datos.</p>";
+            }
+        }
+
+        cargarProductos();
+    </script>
+</body>
+</html>
